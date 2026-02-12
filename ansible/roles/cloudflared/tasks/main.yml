@@ -1,0 +1,51 @@
+---
+- name: Add Cloudflare GPG key
+  ansible.builtin.shell: |
+    curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg \
+      -o /usr/share/keyrings/cloudflare-main.gpg
+  args:
+    creates: /usr/share/keyrings/cloudflare-main.gpg
+
+- name: Add Cloudflare apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main"
+    filename: cloudflared
+    state: present
+
+- name: Install cloudflared
+  ansible.builtin.apt:
+    name: cloudflared
+    state: present
+    update_cache: true
+
+- name: Create cloudflared config directory
+  ansible.builtin.file:
+    path: /etc/cloudflared
+    state: directory
+    mode: "0700"
+
+- name: Deploy cloudflared credentials
+  ansible.builtin.template:
+    src: cloudflared-credentials.json.j2
+    dest: /etc/cloudflared/credentials.json
+    mode: "0600"
+  notify: Restart cloudflared
+
+- name: Deploy cloudflared config
+  ansible.builtin.template:
+    src: cloudflared-config.yml.j2
+    dest: /etc/cloudflared/config.yml
+    mode: "0644"
+  notify: Restart cloudflared
+
+- name: Install cloudflared service
+  ansible.builtin.shell: cloudflared --config /etc/cloudflared/config.yml service install
+  args:
+    creates: /etc/systemd/system/cloudflared.service
+
+- name: Enable and start cloudflared
+  ansible.builtin.systemd:
+    name: cloudflared
+    enabled: true
+    state: started
+    daemon_reload: true

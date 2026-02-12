@@ -1,0 +1,6 @@
+---
+- name: Restart Strapi
+  ansible.builtin.systemd:
+    name: strapi
+    state: restarted
+    daemon_reload: true

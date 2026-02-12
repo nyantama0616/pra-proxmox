@@ -1,0 +1,37 @@
+---
+- name: Install Node.js prerequisites
+  ansible.builtin.apt:
+    name:
+      - curl
+      - unzip
+      - build-essential
+      - python3
+    state: present
+
+- name: Install fnm
+  ansible.builtin.shell: curl -o- https://fnm.vercel.app/install | bash
+  args:
+    creates: /root/.local/share/fnm/fnm
+
+- name: Install Node.js via fnm
+  ansible.builtin.shell: |
+    export PATH="/root/.local/share/fnm:$PATH"
+    eval "$(fnm env)"
+    fnm install 24
+  args:
+    creates: /root/.local/share/fnm/node-versions/v24*
+
+- name: Install pnpm and node-gyp
+  ansible.builtin.shell: |
+    export PATH="/root/.local/share/fnm:$PATH"
+    eval "$(fnm env)"
+    npm install -g pnpm node-gyp
+  changed_when: false
+
+- name: Create fnm default alias
+  ansible.builtin.shell: |
+    export PATH="/root/.local/share/fnm:$PATH"
+    eval "$(fnm env)"
+    fnm alias default 24
+  args:
+    creates: /root/.local/share/fnm/aliases/default
