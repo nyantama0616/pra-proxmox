@@ -6,3 +6,4 @@
 
 # Secrets
 terraform.tfvars
+ansible/.vault_password

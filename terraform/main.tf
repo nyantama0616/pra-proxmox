@@ -23,14 +23,23 @@ resource "proxmox_virtual_environment_container" "strapi" {
   node_name   = var.node_name
   pool_id     = proxmox_virtual_environment_pool.practice.pool_id
   vm_id       = 200
+  unprivileged = true
 
   operating_system {
     template_file_id = "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst"
     type             = "ubuntu"
   }
 
+  features {
+    nesting = true
+  }
+
   initialization {
     hostname = "strapi"
+
+    dns {
+      servers = ["1.1.1.1", "8.8.8.8"]
+    }
 
     ip_config {
       ipv4 {

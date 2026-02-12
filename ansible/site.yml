@@ -1,0 +1,60 @@
+---
+- name: Setup Strapi CMS
+  hosts: strapi
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install prerequisites
+      ansible.builtin.apt:
+        name:
+          - git
+          - curl
+          - unzip
+          - build-essential
+          - python3
+        state: present
+
+    - name: Install fnm
+      ansible.builtin.shell: curl -o- https://fnm.vercel.app/install | bash
+      args:
+        creates: /root/.local/share/fnm/fnm
+
+    - name: Install Node.js via fnm
+      ansible.builtin.shell: |
+        export PATH="/root/.local/share/fnm:$PATH"
+        eval "$(fnm env)"
+        fnm install 24
+      args:
+        creates: /root/.local/share/fnm/node-versions/v24*
+
+    - name: Install pnpm
+      ansible.builtin.shell: |
+        export PATH="/root/.local/share/fnm:$PATH"
+        eval "$(fnm env)"
+        npm install -g pnpm
+      changed_when: false
+
+    - name: Clone repository
+      ansible.builtin.git:
+        repo: https://github.com/nyantama0616/pra-proxmox.git
+        dest: /opt/pra-proxmox
+        version: main
+
+    - name: Install pnpm dependencies
+      ansible.builtin.shell: |
+        export PATH="/root/.local/share/fnm:$PATH"
+        eval "$(fnm env)"
+        pnpm install
+      args:
+        chdir: /opt/pra-proxmox/cms
+
+    - name: Build Strapi
+      ansible.builtin.shell: |
+        export PATH="/root/.local/share/fnm:$PATH"
+        eval "$(fnm env)"
+        pnpm build
+      args:
+        chdir: /opt/pra-proxmox/cms

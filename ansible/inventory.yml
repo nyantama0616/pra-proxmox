@@ -1,0 +1,10 @@
+all:
+  hosts:
+    strapi:
+      ansible_connection: community.proxmox.proxmox_pct_remote
+      ansible_host: "{{ proxmox_ssh_host }}"
+      ansible_port: "{{ proxmox_ssh_port }}"
+      ansible_user: "{{ proxmox_ssh_user }}"
+      ansible_python_interpreter: /bin/python3.12
+      proxmox_node: proxmox
+      proxmox_vmid: 200

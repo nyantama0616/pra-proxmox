@@ -12,5 +12,5 @@ variable "proxmox_api_token" {
 variable "node_name" {
   description = "Proxmox node name"
   type        = string
-  default     = "pve"
+  default     = "proxmox"
 }
