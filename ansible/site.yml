@@ -57,6 +57,31 @@
       args:
         chdir: /opt/pra-proxmox/cms
 
+    # Note: pnpm installではbetter-sqlite3のネイティブバインディング(.nodeファイル)が生成されない。
+    # pnpm rebuildもpnpmの.pnpmストア構造の影響で正しくビルドされない。
+    # そのため、パッケージディレクトリ内で直接node-gyp rebuildを実行する必要がある。
+    - name: Rebuild better-sqlite3 native module
+      ansible.builtin.shell: |
+        export PATH="/root/.local/share/fnm:$PATH"
+        eval "$(fnm env)"
+        cd node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3
+        npx node-gyp rebuild
+      args:
+        chdir: /opt/pra-proxmox/cms
+        creates: /opt/pra-proxmox/cms/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/build/Release/better_sqlite3.node
+
+    # Note: systemdからはfnmのシェル統合(eval "$(fnm env)")を利用できない。
+    # defaultエイリアスを作成すると /root/.local/share/fnm/aliases/default/bin/ に
+    # 安定したシンボリックリンクが生成されるため、systemdのサービスファイルから
+    # fnm evalなしでNode.jsやpnpmのパスを参照できるようになる。
+    - name: Create fnm default alias
+      ansible.builtin.shell: |
+        export PATH="/root/.local/share/fnm:$PATH"
+        eval "$(fnm env)"
+        fnm alias default 24
+      args:
+        creates: /root/.local/share/fnm/aliases/default
+
     - name: Build Strapi
       ansible.builtin.shell: |
         export PATH="/root/.local/share/fnm:$PATH"
@@ -64,3 +89,24 @@
         pnpm build
       args:
         chdir: /opt/pra-proxmox/cms
+
+    - name: Deploy Strapi systemd service
+      ansible.builtin.template:
+        src: templates/strapi.service.j2
+        dest: /etc/systemd/system/strapi.service
+        mode: "0644"
+      notify: Restart Strapi
+
+    - name: Enable and start Strapi
+      ansible.builtin.systemd:
+        name: strapi
+        enabled: true
+        state: started
+        daemon_reload: true
+
+  handlers:
+    - name: Restart Strapi
+      ansible.builtin.systemd:
+        name: strapi
+        state: restarted
+        daemon_reload: true

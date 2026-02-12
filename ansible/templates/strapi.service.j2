@@ -1,0 +1,15 @@
+[Unit]
+Description=Strapi CMS
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/pra-proxmox/cms
+Environment=PATH=/root/.local/share/fnm/aliases/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=/opt/pra-proxmox/cms/.env
+ExecStart=/root/.local/share/fnm/aliases/default/bin/pnpm start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
