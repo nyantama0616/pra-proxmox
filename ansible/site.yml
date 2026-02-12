@@ -43,6 +43,12 @@
         dest: /opt/pra-proxmox
         version: main
 
+    - name: Deploy Strapi .env
+      ansible.builtin.template:
+        src: templates/strapi.env.j2
+        dest: /opt/pra-proxmox/cms/.env
+        mode: "0600"
+
     - name: Install pnpm dependencies
       ansible.builtin.shell: |
         export PATH="/root/.local/share/fnm:$PATH"
