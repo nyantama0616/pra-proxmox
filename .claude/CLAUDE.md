@@ -1,6 +1,6 @@
 # pra-proxmox
 
-Proxmox, Terraform, Ansibleの練習用プロジェクトである。
+Proxmox, Terraform, cloud-init, Ansibleの練習用プロジェクトである。
 
 ## 目的
 
